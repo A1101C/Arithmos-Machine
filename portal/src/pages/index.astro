@@ -1,6 +1,10 @@
 ---
 // src/pages/index.astro
 import Layout from '../layouts/layout.astro';
+
+// Define your image paths here (can be from your /public folder or imported)
+const scientificBg = '/sci.png';
+const graphingBg = '/graph.png';
 ---
 
 <Layout title="Home | Explicanda">
@@ -8,14 +12,14 @@ import Layout from '../layouts/layout.astro';
     <div class="button-grid">
         
         <div class="menu-item">
-            <a href="/calculators/scientific" class="calc-btn">
-                </a>
+            <a href="/calculators/scientific" class="calc-btn" style={`--bg-img: url(${scientificBg})`}>
+            </a>
             <span class="btn-label">Scientific Calculator</span>
         </div>
 
         <div class="menu-item">
-            <a href="/calculators/graphing" class="calc-btn">
-                </a>
+            <a href="/calculators/graphing" class="calc-btn" style={`--bg-img: url(${graphingBg})`}>
+            </a>
             <span class="btn-label">Graphing Calculator</span>
         </div>
 
@@ -42,11 +46,10 @@ import Layout from '../layouts/layout.astro';
         align-items: center;
     }
 
-    /* The exact large button design you liked from before */
+    /*button background images */
     .calc-btn {
         width: 100%;
         height: 200px; /* Massive dashboard height */
-        background-color: #ffffff;
         border-radius: 12px;
         border: 1px solid #e2e8f0;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
@@ -55,6 +58,13 @@ import Layout from '../layouts/layout.astro';
         justify-content: center;
         align-items: center;
         cursor: pointer;
+        
+        /*background properties */
+        background-image: var(--bg-img);
+        background-size: cover;       /*image fills the entire button */
+        background-position: center;   /* centers the image*/
+        background-repeat: no-repeat;
+        background-color: #ffffff;     /* fallback color while image loads */
     }
 
     /* Text label positioned cleanly underneath the large button */
