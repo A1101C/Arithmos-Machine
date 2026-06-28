@@ -18,6 +18,10 @@ std::string cleaner(std::string inputFunction){
 
     replaceAll(inputFunction, " ", "");
 
+    if (inputFunction == "x"){
+        inputFunction = "1x";
+    }
+
 /*    for (int n = 0; n < inputFunction.length() - 1; ++ n) { //creates int variable n and sets it equal to 0, and as long as n is less than the length of the inputFunction string -1 run the stuff run the loop and add 1 to n at the end
         if (std::isdigit(inputFunction[n]) && (inputFunction[n+1]) == 'x') //if the character in position n is a digit and the character in position n+1 is x run next, if not it does ++n
             inputFunction.insert(n+1, "*"); //if above is true it inserts * into the n+1 position, not replaces
