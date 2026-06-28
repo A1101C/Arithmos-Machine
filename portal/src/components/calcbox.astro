@@ -1,42 +1,52 @@
 ---
 // src/components/calcbox.astro
-// Destructure the "mode" prop from the page calling this component
+
 const { mode = "scientific" } = Astro.props;
 const isGraphing = mode === "graphing";
 ---
 
-<div class="container" data-mode={mode}> <!-- main container -->
-    <!--conditional header/prompt. below is the check for if it is graphing, if it is it shows the text with a function of x, if not it shows the text without x -->
-    {isGraphing ? ( 
+<div class="container" data-mode={mode}>
+    {isGraphing ? (
         <h1>Explicanda Graphing Engine</h1>
-        <p>Enter a function of x and its bounds to evaluate (e.g., <code>12x^2+3x-5</code>) with the Min Max and Steps values:</p>
+        <p>Enter a function of x to evaluate (e.g., <code>12x^2+3x-5</code>):</p>
     ) : (
         <h1>Explicanda Math Engine</h1>
         <p>Enter a mathematical expression to evaluate (e.g., <code>3+5*2</code>):</p>
     )}
-    
-    <div class="input-group"> <!--This group holds input text, expression input, and placeholder text for the expression box -->
-        <input type="text" id="expressionInput" placeholder="Type expression here..." autocomplete="off">
-        <button id="evaluateBtn">Evaluate</button>
-    </div>
 
-    <!--This group holds the input and placeholder text for the graphing input boxes -->
-    {isGraphing && (
+    {isGraphing ? (
+        <div class="input-group no-btn">
+            <input type="text" id="expressionInput" placeholder="Type expression here..." autocomplete="off">
+        </div>
         <div class="graph-inputs">
-            <input type="text" id="xMinInput" placeholder="xMin (e.g. 0)" autocomplete="off" />
-            <input type="text" id="xMaxInput" placeholder="xMax (e.g. 10)" autocomplete="off" />
-            <input type="text" id="xCountInput" placeholder="Steps (e.g. 5)" autocomplete="off" />
+            <input type="text" id="xCountInput" placeholder="Number of data points to render" autocomplete="off" />
+        </div>
+        <button id="evaluateBtn" class="evaluate-btn-full">Evaluate</button>
+    ) : (
+        <div class="input-group">
+            <input type="text" id="expressionInput" placeholder="Type expression here..." autocomplete="off">
+            <button id="evaluateBtn">Evaluate</button>
         </div>
     )}
-    <!--This says the results container, or if its graphing the table container, is hidden. -->
+
     <div id="resultContainer" class="result-box hidden">
         {!isGraphing && <h3>Result:</h3>}
         {!isGraphing && <p id="resultText"></p>}
-        <div id="tableContainer"></div>
+
+        {isGraphing && (
+            <div class="table-header" id="tableToggle">
+                <span>Values Table</span>
+                <svg id="tableChevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="18 15 12 9 6 15"/>
+                </svg>
+            </div>
+        )}
+        <div id="tableContainer" class={isGraphing ? "table-collapsible" : ""}></div>
     </div>
 </div>
 
 <style>
+    /* Standard styles remained untouched */
     .container {
         background-color: #ffffff;
         padding: 2.5rem;
@@ -47,99 +57,93 @@ const isGraphing = mode === "graphing";
         box-sizing: border-box;
     }
 
-    h1 {
-        margin-top: 0;
-        font-size: 1.8rem;
-        color: #333;
-    }
-
-    p {
-        color: #666;
-        font-size: 0.95rem;
-        line-height: 1.5;
-    }
-
-    .input-group {
-        display: flex;
-        gap: 10px;
-        margin-top: 1.5rem;
-    }
-
+    h1 { margin-top: 0; font-size: 1.8rem; color: #333; }
+    p { color: #666; font-size: 0.95rem; line-height: 1.5; }
+    .input-group { display: flex; gap: 10px; margin-top: 1.5rem; }
+    .input-group.no-btn { margin-bottom: 0; }
+    
     #expressionInput {
-        flex: 1;
-        padding: 12px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 1rem;
+        flex: 1; padding: 12px; border: 1px solid #ddd;
+        border-radius: 6px; font-size: 1rem;
     }
 
     #evaluateBtn {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 6px;
-        font-weight: bold;
-        cursor: pointer;
+        background-color: #007bff; color: white; border: none;
+        padding: 12px 24px; border-radius: 6px; font-weight: bold;
+        cursor: pointer; transition: background-color 0.2s;
+    }
+    #evaluateBtn:hover { background-color: #0056b3; }
+
+    .evaluate-btn-full {
+        width: 100%; margin-top: 0.75rem; background-color: #007bff;
+        color: white; border: none; padding: 12px; border-radius: 6px;
+        font-weight: bold; font-size: 1rem; cursor: pointer;
         transition: background-color 0.2s;
     }
-
-    #evaluateBtn:hover {
-        background-color: #0056b3;
-    }
+    .evaluate-btn-full:hover { background-color: #0056b3; }
 
     .graph-inputs {
-        display: flex;
-        gap: 10px;
-        margin-top: 1rem;
-        width: 100%;
-        box-sizing: border-box;
-        flex-wrap: wrap;
+        display: flex; gap: 10px; margin-top: 0.75rem;
+        width: 100%; box-sizing: border-box; flex-wrap: wrap;
     }
 
     .graph-inputs input {
-        flex: 1;
-        min-width: 0;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 0.9rem;
-        box-sizing: border-box;
+        flex: 1; min-width: 0; padding: 10px; border: 1px solid #ddd;
+        border-radius: 6px; font-size: 0.9rem; box-sizing: border-box;
     }
 
     .result-box {
-        margin-top: 1.5rem;
-        padding: 15px;
-        background-color: #f8f9fa;
-        border-left: 4px solid #007bff;
-        border-radius: 4px;
+        margin-top: 1.5rem; padding: 15px; background-color: #f8f9fa;
+        border-left: 4px solid #007bff; border-radius: 4px;
+    }
+    .hidden { display: none; }
+
+    .table-header {
+        display: flex; align-items: center; justify-content: space-between;
+        cursor: pointer; user-select: none; font-size: 0.9rem;
+        font-weight: 600; color: #495057; padding: 2px 0 8px 0;
+    }
+    .table-header:hover { color: #007bff; }
+
+    #tableChevron { transition: transform 0.2s ease; flex-shrink: 0; }
+    #tableChevron.collapsed { transform: rotate(180deg); }
+
+    .table-collapsible {
+        max-height: 360px; overflow-y: auto; overflow-x: hidden;
+        transition: max-height 0.25s ease, opacity 0.2s ease; opacity: 1;
+    }
+    .table-collapsible.table-hidden {
+        max-height: 0; overflow: hidden; opacity: 0;
     }
 
-    .hidden {
-        display: none;
-    }
-
-    :global(.points-table) {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 15px;
-    }
-
+    :global(.points-table) { width: 100%; border-collapse: collapse; margin-top: 4px; }
     :global(.points-table th), :global(.points-table td) {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
+        border: 1px solid #ddd; padding: 8px; text-align: left;
     }
-
-    :global(.points-table th) {
-        background-color: #f1f1f1;
-    }
+    :global(.points-table th) { background-color: #f1f1f1; }
 </style>
 
 <script>
+    // Tell TypeScript about our custom global variables
+    declare global {
+        interface Window {
+            __GRAPH_XMIN: number;
+            __GRAPH_XMAX: number;
+            __graph_event_init: boolean;
+            __GRAPH_TIMER: number | ReturnType<typeof setTimeout>;
+        }
+    }
+
+    // Initialize global default bounds
+    window.__GRAPH_XMIN = -10;
+    window.__GRAPH_XMAX = 10;
+    // Initialize global default bounds for initial evaluations
+    window.__GRAPH_XMIN = -10;
+    window.__GRAPH_XMAX = 10;
+
     function runEvaluationEngine() {
         const container = document.querySelector('.container');
-        
+
         const evaluateBtn = document.getElementById('evaluateBtn');
         const expressionInput = document.getElementById('expressionInput');
 
@@ -149,82 +153,103 @@ const isGraphing = mode === "graphing";
         const activeBtn = container.querySelector('#evaluateBtn');
 
         if (activeBtn) {
-            activeBtn.addEventListener('click', () => {
-                sendExpression();
-            });
-
+            activeBtn.addEventListener('click', () => sendExpression());
             expressionInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    sendExpression();
-                }
+                if (e.key === 'Enter') sendExpression();
             });
+        }
+
+        // Table toggle logic
+        const tableToggle = document.getElementById('tableToggle');
+        const tableContainer = document.getElementById('tableContainer');
+        const tableChevron = document.getElementById('tableChevron');
+
+        if (tableToggle && tableContainer && tableChevron) {
+            tableToggle.addEventListener('click', () => {
+                const isHidden = tableContainer.classList.toggle('table-hidden');
+                tableChevron.classList.toggle('collapsed', isHidden);
+            });
+        }
+
+        //intercept debounced pan/zoom requests from graphwindow
+        if (!window.__graph_event_init) {
+            window.addEventListener('graph:request_fetch', (e) => {
+                window.__GRAPH_XMIN = (e as CustomEvent).detail.xMin;
+                window.__GRAPH_XMAX = (e as CustomEvent).detail.xMax;
+
+                clearTimeout(window.__GRAPH_TIMER);
+                window.__GRAPH_TIMER = setTimeout(() => {
+                    const btn = document.getElementById('evaluateBtn');
+                    if (btn) btn.click();
+                }, 300); //debounce set to 300ms
+            });
+            window.__graph_event_init = true;
         }
     }
 
     async function sendExpression() {
-    const container = document.querySelector('.container');
-    const mode = container ? container.getAttribute('data-mode') : 'scientific';
+        const container = document.querySelector('.container');
+        const mode = container ? container.getAttribute('data-mode') : 'scientific';
 
-    const inputElement = document.getElementById('expressionInput') as HTMLInputElement;
-    const xMinElement = document.getElementById('xMinInput') as HTMLInputElement;
-    const xMaxElement = document.getElementById('xMaxInput') as HTMLInputElement;
-    const xCountElement = document.getElementById('xCountInput') as HTMLInputElement;
-    const resultContainer = document.getElementById('resultContainer');
-    const resultText = document.getElementById('resultText');
-    const tableContainer = document.getElementById('tableContainer');
+        const inputElement = document.getElementById('expressionInput') as HTMLInputElement;
+        const xCountElement = document.getElementById('xCountInput') as HTMLInputElement;
+        const resultContainer = document.getElementById('resultContainer');
+        const resultText = document.getElementById('resultText');
+        const tableContainer = document.getElementById('tableContainer');
 
-    if (!inputElement) return;
-    const expressionValue = inputElement.value.trim();
+        if (!inputElement) return;
+        const expressionValue = inputElement.value.trim();
+        
+        //retrieve current dynamic bounds and steps
+        const xMinValue = window.__GRAPH_XMIN.toString();
+        const xMaxValue = window.__GRAPH_XMAX.toString();
+        const xCountValue = xCountElement ? (xCountElement.value.trim() || "1000") : "1000";
 
-    const xMinValue = xMinElement ? xMinElement.value.trim() : "0";
-    const xMaxValue = xMaxElement ? xMaxElement.value.trim() : "0";
-    const xCountValue = xCountElement ? xCountElement.value.trim() : "0";
+        if (!expressionValue) {
+            alert("Please enter a valid expression.");
+            return;
+        }
 
-    if (!expressionValue) {
-        alert("Please enter a valid expression.");
-        return;
-    }
+        try {
+            if (resultText) resultText.innerText = "Evaluating...";
+            
+            let calcType = mode === "graphing" ? "g" : "s";
 
-    try {
-    if (resultText) resultText.innerText = "Evaluating...";
-    if (tableContainer) tableContainer.innerHTML = "";
-
-    let calcType = "s";
-
-    if (mode === "graphing") {
-        calcType = "g";
-    }
-    if (mode === "scientific") {
-        calcType = "s";
-    }
-
-    const response = await fetch('/api/evaluate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            mode: calcType,
-            expression: expressionValue, 
-            xMin: xMinValue, 
-            xMax: xMaxValue, 
-            xCount: xCountValue 
-        })
-    });
+            const response = await fetch('/api/evaluate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    mode: calcType,
+                    expression: expressionValue,
+                    xMin: xMinValue,
+                    xMax: xMaxValue,
+                    xCount: xCountValue
+                })
+            });
 
             const data = await response.json();
 
             if (response.ok && data.success) {
                 resultContainer?.classList.remove('hidden');
-                if (resultText) resultText.innerHTML = `<strong>Input:</strong> ${data.input}<br><strong>Output:</strong> ${data.result}`;                
+                if (resultText) resultText.innerHTML = `<strong>Input:</strong> ${data.input}<br><strong>Output:</strong> ${data.result}`;
+                
                 if (data.points && tableContainer) {
+                    window.dispatchEvent(new CustomEvent('graph:update', { detail: { points: data.points } }));
+                    
                     let tableHtml = "<table class='points-table'><thead><tr><th>X Value</th><th>Y Value</th></tr></thead><tbody>";
                     for (const pt of data.points) {
                         tableHtml += `<tr><td>${pt.x}</td><td>${pt.y}</td></tr>`;
                     }
                     tableHtml += "</tbody></table>";
                     tableContainer.innerHTML = tableHtml;
+
+                    tableContainer.classList.remove('table-hidden');
+                    const chevron = document.getElementById('tableChevron');
+                    if (chevron) chevron.classList.remove('collapsed');
                 }
             } else {
-                if (resultText) resultText.innerText = `Error: ${data.error || "Something went wrong"}`;            }
+                if (resultText) resultText.innerText = `Error: ${data.error || "Something went wrong"}`;
+            }
         } catch (error) {
             console.error("Fetch operation failed:", error);
             if (resultText) resultText.innerText = "Error connecting to the math server backend.";
@@ -232,5 +257,5 @@ const isGraphing = mode === "graphing";
     }
 
     runEvaluationEngine();
-document.addEventListener('astro:page-load', runEvaluationEngine);
+    document.addEventListener('astro:page-load', runEvaluationEngine);
 </script>

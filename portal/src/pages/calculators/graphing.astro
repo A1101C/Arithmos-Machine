@@ -1,11 +1,138 @@
 ---
-// src/pages/calculators/graphing.astro
+// src/pages/calculator/graphing.astro
 import Layout from '../../layouts/layout.astro';
 import Calcbox from '../../components/calcbox.astro';
+import Graph from '../../components/graphwindow.astro';
 ---
 
 <Layout title="Graphing Calculator | Explicanda">
-    
-    <Calcbox mode="graphing" />
+<div class="calc-layout" id="calcLayout">
+    <div class="input-panel" id="inputPanel">
+        <div class="input-scroll">
+            <Calcbox mode="graphing" />
+        </div>
+    </div>
 
+    <!--collapse toggle sits between the two panels -->
+    <button class="collapse-btn" id="collapseBtn" aria-label="Toggle input panel">
+        <svg id="collapseIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+        </svg>
+    </button>
+
+    <div class="graph-area">
+        <Graph />
+    </div>
+</div>
 </Layout>
+
+<style>
+.calc-layout {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.input-panel {
+    width: 420px;
+    flex-shrink: 0;
+    overflow: hidden;
+    max-width: 420px;
+    transition: width 0.3s ease, max-width 0.3s ease, opacity 0.2s ease, padding 0.3s ease;
+    opacity: 1;
+    padding: 1.5rem 0 1.5rem 1.5rem;
+    box-sizing: border-box;
+}
+
+.input-scroll {
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 1rem;
+    box-sizing: border-box;
+}
+
+/*collapse toggle button */
+.collapse-btn {
+    position: relative;
+    z-index: 20;
+    align-self: center;
+    flex-shrink: 0;
+    width: 20px;
+    height: 48px;
+    border-radius: 0 6px 6px 0;
+    border: 1px solid #dee2e6;
+    border-left: none;
+    background: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, border-color 0.15s;
+    box-shadow: 2px 0 6px rgba(0,0,0,0.06);
+    padding: 0;
+}
+
+.collapse-btn:hover {
+    background: #f1f3f5;
+    border-color: #adb5bd;
+}
+
+/*collapsed state */
+.calc-layout.panel-collapsed .input-panel {
+    width: 0;
+    max-width: 0;
+    opacity: 0;
+    padding: 0;
+}
+
+.calc-layout.panel-collapsed .collapse-btn {
+    border-left: 1px solid #dee2e6;
+    border-radius: 6px;
+    margin-left: 0.5rem;
+}
+
+.graph-area {
+    flex: 1;
+    min-width: 0;
+    padding: 1.5rem;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+</style>
+
+<script>
+    function initCollapse() {
+        const collapseBtn = document.getElementById('collapseBtn');
+        const collapseIcon = document.getElementById('collapseIcon');
+        const layout = document.getElementById('calcLayout');
+
+        if (!collapseBtn || !layout) return;
+
+        //clone to remove any stale listeners
+        const freshBtn = collapseBtn.cloneNode(true) as HTMLElement;
+        collapseBtn.replaceWith(freshBtn);
+        const activeIcon = freshBtn.querySelector('#collapseIcon');
+
+        freshBtn.addEventListener('click', () => {
+            const collapsed = layout.classList.toggle('panel-collapsed');
+            if (activeIcon) {
+                activeIcon.innerHTML = collapsed
+                    ? '<polyline points="9 18 15 12 9 6"/>'   // point right = expand
+                    : '<polyline points="15 18 9 12 15 6"/>'; // point left = collapse
+            }
+            //tell the graph to redraw once the transition settles
+            setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('panel:toggled'));
+            }, 320);
+        });
+    }
+
+    initCollapse();
+    document.addEventListener('astro:page-load', initCollapse);
+</script>
