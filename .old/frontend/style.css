@@ -1,5 +1,5 @@
 body { /*defines the style rules for the main body tag of the html document, if it cant find the first font it falls back*/
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Red Hat Mono', monospace;
     background-color: #f4f7f6;
     display: flex;
     justify-content: center;
