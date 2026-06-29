@@ -211,7 +211,7 @@
 
             // axis labels 
             ctx.fillStyle = '#868e96';
-            ctx.font = '12px system-ui, sans-serif';
+            ctx.font = '12px "Red Hat Mono", monospace;';
             ctx.textBaseline = 'middle';
 
             for (let x = firstX; x <= xMax; x += step) {
@@ -230,7 +230,7 @@
             ctx.fillText('0', axisX - 6, axisY + 14);
 
             ctx.fillStyle = '#495057';
-            ctx.font = '13px system-ui, sans-serif';
+            ctx.font = '12px "Red Hat Mono", monospace;';
             ctx.textAlign = 'center';
             ctx.fillText('x', pad.left + plotW / 2, H - 10);
             ctx.save();
