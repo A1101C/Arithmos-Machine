@@ -108,7 +108,7 @@ This however is just the beginning, my plans are to build this out further inclu
 | Implement feature to print the steps |  |
 | Build an integrated set of tests |  |
 | Implement ability to create a table of values| X |
-| Implement ability to generate a graph |  |
+| Implement ability to generate a graph | X |
 | Implement ability to solve for a variable CAS |  |
 | Implement symbolic Calculus solver for Derivatives |  |
 | Implement Symbolic Calculus solver for Integrals |  |
@@ -118,5 +118,5 @@ This however is just the beginning, my plans are to build this out further inclu
 
 | Known Bugs: |
 | :----------: |
-| inconsistent returning of decimal places|
+
 
