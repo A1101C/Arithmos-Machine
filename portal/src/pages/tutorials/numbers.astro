@@ -1,0 +1,36 @@
+---
+// src/pages/tutorials/numbers.astro
+import Template from '../../components/tutorialtemplate.astro';
+import PageHeader from '../../components/tutorialcomponents/pageheader.astro';
+import SubTopic from '../../components/tutorialcomponents/subtopic.astro';
+import Math from '../../components/tutorialcomponents/linemath.astro';
+import BlockMath from '../../components/tutorialcomponents/blockmath.astro';
+
+const mathLinks = [
+  { name: "Georg Cantor's First Set Theory Article", url: "https://encyclopedia.pub/entry/32557" },
+
+  {
+    name: "On a Property of the Class of all Real Algebraic Numbers. by Georg Cantor", 
+    url: "/documents/cantor1874.pdf"
+  }
+];
+---
+
+<Template metaTitle="Understanding Numbers" resources={mathLinks}>
+  
+  <PageHeader 
+    title="Numbers and number theory" 
+    description="What are numbers and how do they work?"
+  />
+
+  <SubTopic title="Number Sets.">
+    <p>
+        Set theory is a branch of mathematics that studies sets, which can be described as a collection of objects or types of numbers.
+    </p>
+
+    <h3>Test h3</h3>
+    <h4>Test h4</h4>
+ 
+  </SubTopic>
+
+</Template>
