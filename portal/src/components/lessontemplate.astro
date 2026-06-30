@@ -1,5 +1,5 @@
 ---
-// src/components/tutorialtemplate.astro
+// src/components/lessontemplate.astro
 import Layout from '../layouts/layout.astro';
 
 interface Resource {
@@ -16,10 +16,10 @@ const { metaTitle, resources = [] } = Astro.props;
 ---
 
 <Layout title={`${metaTitle} | Explicanda`}>
-  <article class="tutorial-container">
+  <article class="lesson-container">
     
     <slot /> {resources.length > 0 && (
-      <footer class="tutorial-resources">
+      <footer class="lesson-resources">
         <h3>Additional Resources</h3>
         <ul class="resource-list">
           {resources.map((item) => (
@@ -37,7 +37,7 @@ const { metaTitle, resources = [] } = Astro.props;
 </Layout>
 
 <style>
-  .tutorial-container {
+  .lesson-container {
     width: 92vw;
     max-width: 1400px; 
     margin: 2rem auto;
@@ -49,13 +49,13 @@ const { metaTitle, resources = [] } = Astro.props;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   }
 
-  .tutorial-resources {
+  .lesson-resources {
     margin-top: 5rem;
     border-top: 1px solid #e2e8f0;
     padding-top: 2rem;
   }
 
-  .tutorial-resources h3 {
+  .lesson-resources h3 {
     font-size: 1.1rem;
     color: #2d3748;
     margin-bottom: 1rem;
@@ -94,7 +94,7 @@ const { metaTitle, resources = [] } = Astro.props;
   .resource-list a:hover .arrow { transform: translateX(4px); }
 
   @media (max-width: 600px) {
-    .tutorial-container {
+    .lesson-container {
       width: 100vw;
       padding: 1.5rem;
       margin: 1rem auto;
