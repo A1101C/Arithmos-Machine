@@ -82,7 +82,7 @@ std::vector < std::string > lexer(std::string inputFunction) {
 
             else if (currentChar == 'x' || currentChar == 'X' || currentChar == 'e' ) { //if the next token is an x or e
                 if (currentChar == 'X'){
-                    currentChar == 'x'; //if x is upper case replace it with lower case
+                    currentChar = 'x'; //if x is upper case replace it with lower case
                 }
 
                 char lastChar(inputFunction[n - 1]); //declares a pointer called lastChar and makes it hold the value of the previous item in the inputFunction

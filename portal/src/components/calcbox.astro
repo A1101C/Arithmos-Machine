@@ -131,19 +131,48 @@ const isGraphing = mode === "graphing";
             __GRAPH_XMAX: number;
             __graph_event_init: boolean;
             __GRAPH_TIMER: number | ReturnType<typeof setTimeout>;
+            __WASM_MODULE: any; // Cache the Wasm engine so it only loads once
         }
     }
 
     // Initialize global default bounds
     window.__GRAPH_XMIN = -10;
     window.__GRAPH_XMAX = 10;
-    // Initialize global default bounds for initial evaluations
-    window.__GRAPH_XMIN = -10;
-    window.__GRAPH_XMAX = 10;
+
+    // Buffers to catch C++ std::cout and std::cerr
+    let outputBuffer = "";
+    let errorBuffer = "";
+
+    // Lazy load the Wasm module so it only downloads when the page needs it
+    async function getWasmEngine() {
+        if (window.__WASM_MODULE) return window.__WASM_MODULE;
+
+        try {
+            // Import relatively from the src directory now!
+            const moduleImport = await import('../wasm/evaluate.js');
+            const initWasmModule = moduleImport.default;
+
+            window.__WASM_MODULE = await initWasmModule({
+                print: (text: string) => { outputBuffer += text + '\n'; },
+                printErr: (text: string) => { errorBuffer += text + '\n'; },
+                
+                // Tell Emscripten to fetch the .wasm binary from the public folder
+                locateFile: (path: string) => {
+                    if (path.endsWith('.wasm')) {
+                        return '/wasm/evaluate.wasm';
+                    }
+                    return path;
+                }
+            });
+            return window.__WASM_MODULE;
+        } catch (err) {
+            console.error("Failed to load WebAssembly engine:", err);
+            return null;
+        }
+    }
 
     function runEvaluationEngine() {
         const container = document.querySelector('.container');
-
         const evaluateBtn = document.getElementById('evaluateBtn');
         const expressionInput = document.getElementById('expressionInput');
 
@@ -171,7 +200,7 @@ const isGraphing = mode === "graphing";
             });
         }
 
-        //intercept debounced pan/zoom requests from graphwindow
+        // Intercept debounced pan/zoom requests from graphwindow
         if (!window.__graph_event_init) {
             window.addEventListener('graph:request_fetch', (e) => {
                 window.__GRAPH_XMIN = (e as CustomEvent).detail.xMin;
@@ -181,10 +210,13 @@ const isGraphing = mode === "graphing";
                 window.__GRAPH_TIMER = setTimeout(() => {
                     const btn = document.getElementById('evaluateBtn');
                     if (btn) btn.click();
-                }, 300); //debounce set to 300ms
+                }, 300); // debounce set to 300ms
             });
             window.__graph_event_init = true;
         }
+        
+        // Preload the engine in the background when the component mounts
+        getWasmEngine(); 
     }
 
     async function sendExpression() {
@@ -200,7 +232,6 @@ const isGraphing = mode === "graphing";
         if (!inputElement) return;
         const expressionValue = inputElement.value.trim();
         
-        //retrieve current dynamic bounds and steps
         const xMinValue = window.__GRAPH_XMIN.toString();
         const xMaxValue = window.__GRAPH_XMAX.toString();
         const xCountValue = xCountElement ? (xCountElement.value.trim() || "1000") : "1000";
@@ -213,31 +244,52 @@ const isGraphing = mode === "graphing";
         try {
             if (resultText) resultText.innerText = "Evaluating...";
             
+            const engine = await getWasmEngine();
+            if (!engine) throw new Error("Math engine failed to load.");
+
+            // Clear buffers before running
+            outputBuffer = "";
+            errorBuffer = "";
+            
             let calcType = mode === "graphing" ? "g" : "s";
+            
+            // Build the arguments just like the command line API
+            const args = [calcType, expressionValue];
+            if (calcType === "g") {
+                args.push(xMinValue, xMaxValue, xCountValue);
+            }
 
-            const response = await fetch('/api/evaluate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    mode: calcType,
-                    expression: expressionValue,
-                    xMin: xMinValue,
-                    xMax: xMaxValue,
-                    xCount: xCountValue
-                })
-            });
+            // Run the C++ main function locally!
+            engine.callMain(args);
 
-            const data = await response.json();
+            // Parsing logic based on the C++ stdout buffer
+            resultContainer?.classList.remove('hidden');
+            
+            if (errorBuffer && !outputBuffer) {
+                if (resultText) resultText.innerText = `Error: ${errorBuffer}`;
+                return;
+            }
 
-            if (response.ok && data.success) {
-                resultContainer?.classList.remove('hidden');
-                if (resultText) resultText.innerHTML = `<strong>Input:</strong> ${data.input}<br><strong>Output:</strong> ${data.result}`;
+            if (calcType === "s") {
+                if (resultText) resultText.innerHTML = `<strong>Input:</strong> ${expressionValue}<br><strong>Output:</strong> ${outputBuffer.trim()}`;
+            } else if (calcType === "g") {
+                const points = [];
+                const lines = outputBuffer.split('\n');
                 
-                if (data.points && tableContainer) {
-                    window.dispatchEvent(new CustomEvent('graph:update', { detail: { points: data.points } }));
+                for (const line of lines) {
+                    const match = line.match(/\(([^,]+),\s*([^)]+)\)/);
+                    if (match) {
+                        points.push({ x: match[1].trim(), y: match[2].trim() });
+                    }
+                }
+
+                if (resultText) resultText.innerHTML = `<strong>Input:</strong> ${expressionValue}<br><strong>Output:</strong> Calculated ${points.length} points`;
+                
+                if (points.length > 0 && tableContainer) {
+                    window.dispatchEvent(new CustomEvent('graph:update', { detail: { points: points } }));
                     
                     let tableHtml = "<table class='points-table'><thead><tr><th>X Value</th><th>Y Value</th></tr></thead><tbody>";
-                    for (const pt of data.points) {
+                    for (const pt of points) {
                         tableHtml += `<tr><td>${pt.x}</td><td>${pt.y}</td></tr>`;
                     }
                     tableHtml += "</tbody></table>";
@@ -247,12 +299,10 @@ const isGraphing = mode === "graphing";
                     const chevron = document.getElementById('tableChevron');
                     if (chevron) chevron.classList.remove('collapsed');
                 }
-            } else {
-                if (resultText) resultText.innerText = `Error: ${data.error || "Something went wrong"}`;
             }
         } catch (error) {
-            console.error("Fetch operation failed:", error);
-            if (resultText) resultText.innerText = "Error connecting to the math server backend.";
+            console.error("Local execution failed:", error);
+            if (resultText) resultText.innerText = "Error running the math engine locally.";
         }
     }
 

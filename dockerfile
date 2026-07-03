@@ -1,23 +1,18 @@
+#compile the C++ to WebAssembly
+FROM emscripten/emsdk AS wasm-builder
 
-#compile the cpp binary
+WORKDIR /explicanda
 
-FROM gcc:12.2 AS cpp-builder
+#copy C++ source and header files into their respective directories
+COPY ./src ./src
+COPY ./include ./include
 
-WORKDIR /explicanda/src/
-
-#copy cpp source files
-COPY main.cpp /explicanda/src/
-COPY ./src/* /explicanda/src/
-COPY ./include/* /explicanda/src/
-
-#create output folder and compile binary
-RUN mkdir -p output && \
-    g++ -std=c++17 -O3 *.cpp -I . -o output/engine
+#create a build folder and compile the binary to Wasm
+RUN mkdir -p build && cd build && \
+    emcc ../src/*.cpp -I../include -O3 -s MODULARIZE=1 -s EXPORT_ES6=1 -s INVOKE_RUN=0 -s "EXPORTED_RUNTIME_METHODS=['callMain']" -o evaluate.js
 
 
-
-#build the astro ssr server
-
+#build the Astro SSR server
 FROM node:22-slim
 
 WORKDIR /explicanda/portal/
@@ -29,21 +24,21 @@ RUN npm install
 #copy all Astro project source files into the container
 COPY portal/ ./
 
-#copy the compiled cpp binary into the parent directory where evaluate.js expects it
-COPY --from=cpp-builder /explicanda/src/output/engine /explicanda/output/engine
+#copy the generated Wasm files into the exact spots vite and emscripten expect them
+#js goes to src/ so vite can bundle it
+COPY --from=wasm-builder /explicanda/build/evaluate.js ./src/wasm/evaluate.js
+#wasm goes to public/ so it can be fetched as a static asset
+COPY --from=wasm-builder /explicanda/build/evaluate.wasm ./public/wasm/evaluate.wasm
 
-#ensure the process has permission to run the compiled cpp binary
-RUN chmod +x /explicanda/output/engine
-
-#run the astro build command
+#run the Astro build command
 RUN npm run build
 
 #astro's node server defaults to port 4321
 EXPOSE 4321
 
-#set environment variables so astro listens on all network interfaces inside Docker
+#set environment variables so Astro listens on all network interfaces inside Docker
 ENV HOST=0.0.0.0
 ENV PORT=4321
 
-#command to launch the compiled astro server
+#command to launch the compiled Astro server
 CMD ["node", "./dist/server/entry.mjs"]
