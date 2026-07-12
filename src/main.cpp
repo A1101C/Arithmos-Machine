@@ -19,8 +19,21 @@
 
 int main(int argCount, char*argVector[]) {    //this is the main fuction, int means that it will return an int value to whatever ran it, 0 means success and 1 means failure
 
+    if (argCount > 2){
+    //this grabs the last two positions in the inputVector
+        for (int n = argCount - 1; n >= (int)argCount - 2; n--) {
+            std::string tempFlag = argVector[n];  //set a tempFlag equal to the inputVector position n
+            if (tempFlag == "-d"){
+                config::debugMode = true; //if either flag is -d set debugMode to true
+            }
+            if (tempFlag == "-s"){
+                config::showSteps = true; //if either flag is -s set show steps to true
+            }
+            else;
+                continue;
+        }
+    }
 
-    
     if (config::debugMode) { //if debug mode print the arg vector we started the main with
         std::cout <<"Main started with:";
         for (int n = 0; n < argCount; n++){
@@ -44,12 +57,12 @@ int main(int argCount, char*argVector[]) {    //this is the main fuction, int me
     std::string tempString; //initializes a temp string to hold the input as we clean the rawString
     std::string calcType; //initializes a string to hold the calctype
     std::string messyFunction; //initializes a string to hold the messyFunction
-    std::bool calcLoop = true; //makes a bool and sets it true for pulling the calctype out of the argVector
-    std::bool exprLoop = false; //makes a bool and sets it true for pulling the expression out of the argVector
+    bool calcLoop = true; //makes a bool and sets it true for pulling the calctype out of the argVector
+    bool exprLoop = false; //makes a bool and sets it true for pulling the expression out of the argVector
 
-    for ( int n = 0, n < rawString.length(); n++){ //for the length of the rawString
+    for ( int n = 0; n < rawString.length(); n++){ //for the length of the rawString
         while (calcLoop == true){
-            if rawString[n] != "(";{
+            if (rawString[n] != '('){
                 tempString.push_back(rawString[n]);
                 n++;
             }
@@ -58,11 +71,12 @@ int main(int argCount, char*argVector[]) {    //this is the main fuction, int me
                 tempString.clear();
                 calcLoop = false;
                 exprLoop = true;
+                n++;
             }
             
         }
         while (exprLoop == true){
-            if rawString[n] != ")";{
+            if (rawString[n] != ')'){
                 tempString.push_back(rawString[n]);
                 n++;
             }
@@ -70,6 +84,7 @@ int main(int argCount, char*argVector[]) {    //this is the main fuction, int me
                 messyFunction = tempString;
                 tempString.clear();
                 exprLoop = false;
+                n++;
             }
 
         }
@@ -89,11 +104,19 @@ int main(int argCount, char*argVector[]) {    //this is the main fuction, int me
     if (containsString("x", parsedFunction) || containsString("X", parsedFunction) ){ //if the string contains either x or upper case X
         parsedFunction = replaceStrings(parsedFunction, "X", "x"); //if X is upper case it replaces it with a lower case x
         containsX = true; //then sets containsX to true
-        }
+    }
 
-    switch (calcType) { //switch statement is faster than a bunch of if else statements
+    int calcInt = 0;
+    if (calcType == "sci"){
+        calcInt = 1;
+    }
+    if (calcType == "graph"){
+        calcInt = 2;
+    }
+
+    switch (calcInt) { //switch statement is faster than a bunch of if else statements
         // the item in the above parenthesis is compared to each case below and that is how it selects the right option
-        case "sci":
+        case 1:
             if (containsX){ // and contains an x
                 parsedFunction = replaceStrings(parsedFunction, "x", "0"); //replace the x in the parsedFunction with 0
                 solution = interpreter(parsedFunction); //sends the parsedFunction to the interpreter to be solved for the y intercept
@@ -110,7 +133,7 @@ int main(int argCount, char*argVector[]) {    //this is the main fuction, int me
         
             break;
 
-        case "graph":
+        case 2:
             if (containsX){
             //preload the x range information to defaults
             double xMin = -100;
