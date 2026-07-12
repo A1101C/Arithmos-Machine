@@ -1,0 +1,194 @@
+---
+// src/components/testbox.astro
+
+---
+
+<div class="container">
+    <h1>Explicanda Testing Box</h1>
+    <p>Enter an argument to pass to the WASM engine.</p>
+    <p>(e.g., <code>graph(3x+1) -25 25 50 -d -s</code>)</p>
+    <p><code>graph(expr) calculate points</code></p>
+    <p><code>sci(expr) does scientific calculations</code></p>
+    <p><code>-d enables debug output, and -s will eventually output the steps</code></p>
+
+    
+    <div class="input-group">
+        <input type="text" id="expressionInput" placeholder="Type expression here..." autocomplete="off">
+        <button id="evaluateBtn">Evaluate</button>
+    </div>
+    
+
+    <div id="resultContainer" class="result-box hidden">
+        <h3>Result:</h3>
+        <p id="resultText"></p>
+    
+    </div>
+</div>
+
+<style>
+    /* Standard styles remained untouched */
+    .container {
+        background-color: #ffffff;
+        padding: 2.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        max-width: 600px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    h1 { margin-top: 0; font-size: 1.8rem; color: #333; }
+    p { color: #666; font-size: 0.95rem; line-height: 1.5; }
+    .input-group { display: flex; gap: 10px; margin-top: 1.5rem; }
+    .input-group.no-btn { margin-bottom: 0; }
+    
+    #expressionInput {
+        flex: 1; padding: 12px; border: 1px solid #ddd;
+        border-radius: 6px; font-size: 1rem;
+    }
+
+    #evaluateBtn {
+        background-color: #007bff; color: white; border: none;
+        padding: 12px 24px; border-radius: 6px; font-weight: bold;
+        cursor: pointer; transition: background-color 0.2s;
+    }
+    #evaluateBtn:hover { background-color: #0056b3; }
+
+    .evaluate-btn-full {
+        width: 100%; margin-top: 0.75rem; background-color: #007bff;
+        color: white; border: none; padding: 12px; border-radius: 6px;
+        font-weight: bold; font-size: 1rem; cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .evaluate-btn-full:hover { background-color: #0056b3; }
+
+    .graph-inputs {
+        display: flex; gap: 10px; margin-top: 0.75rem;
+        width: 100%; box-sizing: border-box; flex-wrap: wrap;
+    }
+
+    .graph-inputs input {
+        flex: 1; min-width: 0; padding: 10px; border: 1px solid #ddd;
+        border-radius: 6px; font-size: 0.9rem; box-sizing: border-box;
+    }
+
+    .result-box {
+        margin-top: 1.5rem; padding: 15px; background-color: #f8f9fa;
+        border-left: 4px solid #007bff; border-radius: 4px;
+    }
+    .hidden { display: none; }
+
+    .table-header {
+        display: flex; align-items: center; justify-content: space-between;
+        cursor: pointer; user-select: none; font-size: 0.9rem;
+        font-weight: 600; color: #2d3748; padding: 2px 0 8px 0;
+    }
+    .table-header:hover { color: #007bff; }
+
+    #tableChevron { transition: transform 0.2s ease; flex-shrink: 0; }
+    #tableChevron.collapsed { transform: rotate(180deg); }
+
+    .table-collapsible {
+        max-height: 360px; overflow-y: auto; overflow-x: hidden;
+        transition: max-height 0.25s ease, opacity 0.2s ease; opacity: 1;
+    }
+    .table-collapsible.table-hidden {
+        max-height: 0; overflow: hidden; opacity: 0;
+    }
+
+    :global(.points-table) { width: 100%; border-collapse: collapse; margin-top: 4px; }
+    :global(.points-table th), :global(.points-table td) {
+        border: 1px solid #ddd; padding: 8px; text-align: left;
+    }
+    :global(.points-table th) { background-color: #f1f1f1; }
+</style>
+
+<script>
+    declare global {
+    interface Window {
+        __WASM_MODULE: any;
+    }
+}
+
+let outputBuffer = "";
+let errorBuffer = "";
+
+async function getWasmEngine() {
+    if (window.__WASM_MODULE) return window.__WASM_MODULE;
+
+    try {
+        const moduleImport = await import('../wasm/evaluate.js');
+        const initWasmModule = moduleImport.default;
+
+        window.__WASM_MODULE = await initWasmModule({
+            print: (text: string) => { outputBuffer += text + '\n'; },
+            printErr: (text: string) => { errorBuffer += text + '\n'; },
+            locateFile: (path: string) => {
+                if (path.endsWith('.wasm')) return '/wasm/evaluate.wasm';
+                return path;
+            }
+        });
+        return window.__WASM_MODULE;
+    } catch (err) {
+        console.error("Failed to load WebAssembly engine:", err);
+        return null;
+    }
+}
+
+function runEvaluationEngine() {
+    const evaluateBtn = document.getElementById('evaluateBtn');
+    const expressionInput = document.getElementById('expressionInput');
+    if (!evaluateBtn || !expressionInput) return;
+
+    evaluateBtn.addEventListener('click', () => sendExpression());
+    expressionInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendExpression();
+    });
+
+    //preload the engine in the background when the component mounts
+    getWasmEngine();
+}
+
+async function sendExpression() {
+    const inputElement = document.getElementById('expressionInput') as HTMLInputElement;
+    const resultContainer = document.getElementById('resultContainer');
+    const resultText = document.getElementById('resultText');
+
+    if (!inputElement) return;
+    const expressionValue = inputElement.value.trim();
+    if (!expressionValue) {
+        alert("Please enter a valid expression.");
+        return;
+    }
+
+    try {
+        if (resultText) resultText.innerText = "Evaluating...";
+
+        const engine = await getWasmEngine();
+        if (!engine) throw new Error("Math engine failed to load.");
+
+        outputBuffer = "";
+        errorBuffer = "";
+
+        //pass the raw input straight through with split on spaces like a command line
+        engine.callMain(expressionValue.split(' '));
+
+        //force flush stdio
+        try {
+            engine.ccall('fflush', null, ['number'], [0]);
+        } 
+        catch (e) {
+            console.warn("fflush failed:", e);
+        }   
+
+        resultContainer?.classList.remove('hidden');
+        if (resultText) resultText.innerText = errorBuffer || outputBuffer;
+    } catch (error) {
+        console.error("Local execution failed:", error);
+        if (resultText) resultText.innerText = "Error running the math engine locally.";
+    }
+}
+
+runEvaluationEngine();
+document.addEventListener('astro:page-load', runEvaluationEngine);
+</script>
