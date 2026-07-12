@@ -43,7 +43,7 @@ int main(int argCount, char*argVector[]) {    //this is the main fuction, int me
     }
 
     if (argCount < 2) { //makes sure we have the bare minimum number of arguments to run
-        std::cerr << "error: Usage: ./engine calcType(expr) flags\n";
+        std::cerr << "error: Usage: ./engine \"calcType(expr)\" flags\n";
         std::cerr << "Valid calcType: graph(expr), sci(expr)\n";
         std::cerr << "Valid Flags: -d and or -e\n";
         std::cerr << "Valid Flags: for graphing xMin xMax xCount or xMin xMax xCount and -d and or -e\n";
