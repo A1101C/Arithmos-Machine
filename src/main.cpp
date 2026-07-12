@@ -13,11 +13,14 @@
 #include "interpreter.h" //includes the interpreter.h file defining the interpreter
 #include "graphpoints.h" //includes the graphing function
 
-int main(int argCount, char*argVector[]) {    //this is the main fuction, int means that it will return an int value to whatever ran it, 0 means success and 1 means failure
-//arg count is the number of arguments going in, argVector is the actual user input function
-// use is going to change to include a calctype option at the beginning
-// 0 will be the binary being actually called, 1 will be calctype, 2 will be the messy expression, then 3-5 will be the options for graphing
 
+// arguments will be passed like calcType{messyFunction}
+// and if you know the xmin max and count you can pass it as calcType{messyFunction} xMin xMax xCount
+
+int main(int argCount, char*argVector[]) {    //this is the main fuction, int means that it will return an int value to whatever ran it, 0 means success and 1 means failure
+
+
+    
     if (config::debugMode) { //if debug mode print the arg vector we started the main with
         std::cout <<"Main started with:";
         for (int n = 0; n < argCount; n++){
@@ -26,22 +29,53 @@ int main(int argCount, char*argVector[]) {    //this is the main fuction, int me
         std::cout  << " \n";
     }
 
-    double solution; //initializes solution as a double
-
-    if (argCount < 2) {
-        std::cerr << "error: No expression provided. Usage: ./engine [calcType] [expr] or ./engine [calcType] [expr] [minX] [maxX] [xCount]" << "\n";
-        return 1; //exit safely instead of trying to read empty arguments
+    if (argCount < 2) { //makes sure we have the bare minimum number of arguments to run
+        std::cerr << "error: Usage: ./engine calcType(expr) flags\n";
+        std::cerr << "Valid calcType: graph(expr), sci(expr)\n";
+        std::cerr << "Valid Flags: -d and or -e\n";
+        std::cerr << "Valid Flags: for graphing xMin xMax xCount or xMin xMax xCount and -d and or -e\n";
+        
+        return 1;
     }
 
-    std::string calcType = argVector[1]; //defines and stores the calctype option
-        /*s will be used to say its a scientific calculation, g will be graphing. in the future c will be cas, d will be derivative, i will be integral.*/
+    double solution; //initializes solution as a double
 
-    std::string messyFunction = argVector[2]; //defines the messy expression as the first argument for the input passed by the api
+    std::string rawString = argVector[1]; //saves the raw input in the vector position 1 as rawString
+    std::string tempString; //initializes a temp string to hold the input as we clean the rawString
+    std::string calcType; //initializes a string to hold the calctype
+    std::string messyFunction; //initializes a string to hold the messyFunction
+    std::bool calcLoop = true; //makes a bool and sets it true for pulling the calctype out of the argVector
+    std::bool exprLoop = false; //makes a bool and sets it true for pulling the expression out of the argVector
 
-    //safely preload variables for when not graphing
-    double xMin = 0.0;
-    double xMax = 0.0;
-    double xCount = 0.0;
+    for ( int n = 0, n < rawString.length(); n++){ //for the length of the rawString
+        while (calcLoop == true){
+            if rawString[n] != "(";{
+                tempString.push_back(rawString[n]);
+                n++;
+            }
+            else{
+                calcType = tempString;
+                tempString.clear();
+                calcLoop = false;
+                exprLoop = true;
+            }
+            
+        }
+        while (exprLoop == true){
+            if rawString[n] != ")";{
+                tempString.push_back(rawString[n]);
+                n++;
+            }
+            else{
+                messyFunction = tempString;
+                tempString.clear();
+                exprLoop = false;
+            }
+
+        }
+    }
+
+
 
     //run the function through the cleaner, lexer, and parser regardless of if we are graphing or not
     std::string cleanFunction = cleaner(messyFunction); //declares a string variable to hold a cleaned up input and gets the cleanFunction by passing the messy function to the cleaner
@@ -52,66 +86,88 @@ int main(int argCount, char*argVector[]) {    //this is the main fuction, int me
     bool containsX = false; //initializes the bool
 
     //checks if the string contains an x
-    if (containsString("x", parsedFunction) == true){
-        containsX = true; //if it does then it sets the variable to true
-    }
-
-    if (containsString("X", parsedFunction) == true){
-            parsedFunction = replaceStrings(parsedFunction, "X", "x"); //if x is upper case it replaces it with a lower case x
-            containsX = true; //then sets containsX to true
+    if (containsString("x", parsedFunction) || containsString("X", parsedFunction) ){ //if the string contains either x or upper case X
+        parsedFunction = replaceStrings(parsedFunction, "X", "x"); //if X is upper case it replaces it with a lower case x
+        containsX = true; //then sets containsX to true
         }
 
-    //if calcType is s
-    if (calcType == "s"){
-        if (containsX){ // and contains an x
-            parsedFunction = replaceStrings(parsedFunction, "x", "0"); //replace the x in the parsedFunction with 0
-            solution = interpreter(parsedFunction); //sends the parsedFunction to the interpreter to be solved for the y intercept
-        }
-        else if (!containsX){ //and if it doesn't contain x then just pass it to the evaluator
-            solution = interpreter(parsedFunction);
-        }
-
-        std::cout << solution << " \n"; //prints the solution to the console
-
-        if (!config::debugMode){ //if we aren't debugging we can just exit after this
-            return 0;
-        }
-    }
-
-    //if we are doing a graphing calculation then we can calculate x,y values, to start I will make it generate a vector of values within our xMin and xMax, then calculate the solution for each x value
-    else if (calcType == "g") {
-        
-        if (containsX){
-            //load the actual variables if they exist
-            xMin = std::stod(argVector[3]); //states the xMin is the second input
-            xMax = std::stod(argVector[4]); //states the xMax is the third input
-            xCount = std::stod(argVector[5]); //states the xCount is the fourth input
-
-            std::vector < std::pair < double, double >> xyPairs; //initializes a vector of pairs to hold xy values
-
-            xyPairs = graphpoints(parsedFunction, xMin, xMax, xCount); //passes the parsedFunction into the graphpoints tool
-
-            for (int n = 0; n < xyPairs.size(); n++ ) { //for every pair in the xyPairs vector
-                std::cout << "(" << xyPairs[n].first << ", " << xyPairs[n].second << ")" << " \n"; //prints each pair as (xValue, yValue)
+    switch (calcType) { //switch statement is faster than a bunch of if else statements
+        // the item in the above parenthesis is compared to each case below and that is how it selects the right option
+        case "sci":
+            if (containsX){ // and contains an x
+                parsedFunction = replaceStrings(parsedFunction, "x", "0"); //replace the x in the parsedFunction with 0
+                solution = interpreter(parsedFunction); //sends the parsedFunction to the interpreter to be solved for the y intercept
+            }
+            else if (!containsX){ //and if it doesn't contain x then just pass it to the evaluator
+                solution = interpreter(parsedFunction);
             }
 
-            std::vector < std::pair < double, double >> yInt; //initializes a vector of pairs to hold the yInt
-            yInt = graphpoints(parsedFunction, 0.0, 1.0, 1.0);
-            solution = yInt[0].second;
-        }
+            std::cout << solution << " \n"; //prints the solution to the console
 
-        if (!config::debugMode){ //if we aren't debugging we can just exit after this
-            return 0;
-        }
-    }
+            if (!config::debugMode){ //if we aren't debugging we can just exit after this
+                return 0;
+            }
+        
+            break;
 
-    else { //if it does not fall into the above categories then it is not going to work
-        std::cerr << "error: This calculation is not supported: Failure in main.cpp" << " /n";
-        for (int n = 0; n < argCount; n++) { //this loop will print an error I can see in the network response page while inspecting payloads and responses
-            std::cerr << argVector[n] << " ";
-        }
-        std::cerr << "/n";
-        return 1; //exit safely instead of trying to read empty arguments
+        case "graph":
+            if (containsX){
+            //preload the x range information to defaults
+            double xMin = -100;
+            double xMax = 100;
+            double xCount = 200;
+
+                //load the actual variables if they exist
+
+                if (argCount >= 5) { //if there are enough input arguments try to turn them into doubles
+                    try {
+                        xMin = std::stod(argVector[2]);
+                        xMax = std::stod(argVector[3]);
+                        xCount = std::stod(argVector[4]);
+                    } 
+                    catch (const std::exception& e) {
+                        //if stod fails then use defaults, might fail if its a letter for some reason
+                        std::cerr << "Warning: Invalid bounds provided. Using defaults.\n";
+                        xMin = -100.0;
+                        xMax = 100.0;
+                        xCount = 200.0;
+                    }
+                } 
+                
+                else {
+                    //if argCount is less than five they didnt enter enough arguments so just proceed with the defaults we preloaded
+                    if (config::debugMode) {
+                        std::cout << "Optional bounds missing, using default.\n";
+                    }
+                }
+                
+                std::vector < std::pair < double, double >> xyPairs; //initializes a vector of pairs to hold xy values
+
+                xyPairs = graphpoints(parsedFunction, xMin, xMax, xCount); //passes the parsedFunction and x range information into the graphpoints tool
+
+                for (int n = 0; n < xyPairs.size(); n++ ) { //for every pair in the xyPairs vector
+                    std::cout << "(" << xyPairs[n].first << ", " << xyPairs[n].second << ")" << " \n"; //prints each pair as (xValue, yValue)
+                }
+
+                std::vector < std::pair < double, double >> yInt; //initializes a vector of pairs to hold the yInt
+                yInt = graphpoints(parsedFunction, 0.0, 1.0, 1.0);
+                solution = yInt[0].second;
+            }
+
+            if (!config::debugMode){ //if we aren't debugging we can just exit after this
+                return 0;
+            }
+            break;
+
+        default:
+            std::cerr << "error: This calculation is not supported: Failure in main.cpp" << " /n";
+            for (int n = 0; n < argCount; n++) { //this loop will print an error I can see in the network response page while inspecting payloads and responses
+                std::cerr << argVector[n] << " ";
+            }
+            std::cerr << "/n";
+            return 1; //exit safely instead of trying to read empty arguments
+            
+            break;
     }
 
     if (config::debugMode) { //prints the messy function and clean function if debug mode is true
