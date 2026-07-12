@@ -124,7 +124,7 @@ const isGraphing = mode === "graphing";
 </style>
 
 <script>
-    // Tell TypeScript about our custom global variables
+    //tell TypeScript about our custom global variables
     declare global {
         interface Window {
             __GRAPH_XMIN: number;
@@ -135,20 +135,20 @@ const isGraphing = mode === "graphing";
         }
     }
 
-    // Initialize global default bounds
+    //initialize global default bounds
     window.__GRAPH_XMIN = -10;
     window.__GRAPH_XMAX = 10;
 
-    // Buffers to catch C++ std::cout and std::cerr
+    //buffers to catch C++ std::cout and std::cerr
     let outputBuffer = "";
     let errorBuffer = "";
 
-    // Lazy load the Wasm module so it only downloads when the page needs it
+    //lazy load the Wasm module so it only downloads when the page needs it
     async function getWasmEngine() {
         if (window.__WASM_MODULE) return window.__WASM_MODULE;
 
         try {
-            // Import relatively from the src directory now!
+            //import relatively from the src directory now!
             const moduleImport = await import('../wasm/evaluate.js');
             const initWasmModule = moduleImport.default;
 
@@ -156,7 +156,7 @@ const isGraphing = mode === "graphing";
                 print: (text: string) => { outputBuffer += text + '\n'; },
                 printErr: (text: string) => { errorBuffer += text + '\n'; },
                 
-                // Tell Emscripten to fetch the .wasm binary from the public folder
+                //tell Emscripten to fetch the .wasm binary from the public folder
                 locateFile: (path: string) => {
                     if (path.endsWith('.wasm')) {
                         return '/wasm/evaluate.wasm';
@@ -188,7 +188,7 @@ const isGraphing = mode === "graphing";
             });
         }
 
-        // Table toggle logic
+        //table toggle logic
         const tableToggle = document.getElementById('tableToggle');
         const tableContainer = document.getElementById('tableContainer');
         const tableChevron = document.getElementById('tableChevron');
@@ -200,7 +200,7 @@ const isGraphing = mode === "graphing";
             });
         }
 
-        // Intercept debounced pan/zoom requests from graphwindow
+        //intercept debounced pan/zoom requests from graphwindow
         if (!window.__graph_event_init) {
             window.addEventListener('graph:request_fetch', (e) => {
                 window.__GRAPH_XMIN = (e as CustomEvent).detail.xMin;
@@ -210,12 +210,12 @@ const isGraphing = mode === "graphing";
                 window.__GRAPH_TIMER = setTimeout(() => {
                     const btn = document.getElementById('evaluateBtn');
                     if (btn) btn.click();
-                }, 300); // debounce set to 300ms
+                }, 300); // debounce set to 100ms
             });
             window.__graph_event_init = true;
         }
         
-        // Preload the engine in the background when the component mounts
+        //preload the engine in the background when the component mounts
         getWasmEngine(); 
     }
 
@@ -247,22 +247,22 @@ const isGraphing = mode === "graphing";
             const engine = await getWasmEngine();
             if (!engine) throw new Error("Math engine failed to load.");
 
-            // Clear buffers before running
+            //clear buffers before running
             outputBuffer = "";
             errorBuffer = "";
             
-            let calcType = mode === "graphing" ? "g" : "s";
+            let calcType = mode === "graphing" ? "graph" : "sci";
             
-            // Build the arguments just like the command line API
-            const args = [calcType, expressionValue];
-            if (calcType === "g") {
+            //build the arguments just like the command line API
+            const args = [`${calcType}(${expressionValue})`];
+            if (calcType === "graph") {
                 args.push(xMinValue, xMaxValue, xCountValue);
             }
 
-            // Run the C++ main function locally!
+            //run the wasm main function locally!
             engine.callMain(args);
 
-            // Parsing logic based on the C++ stdout buffer
+            //parsing logic based on the C++ stdout buffer
             resultContainer?.classList.remove('hidden');
             
             if (errorBuffer && !outputBuffer) {
@@ -270,9 +270,9 @@ const isGraphing = mode === "graphing";
                 return;
             }
 
-            if (calcType === "s") {
+            if (calcType === "sci") {
                 if (resultText) resultText.innerHTML = `<strong>Input:</strong> ${expressionValue}<br><strong>Output:</strong> ${outputBuffer.trim()}`;
-            } else if (calcType === "g") {
+            } else if (calcType === "graph") {
                 const points = [];
                 const lines = outputBuffer.split('\n');
                 
