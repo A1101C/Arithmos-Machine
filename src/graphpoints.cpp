@@ -58,7 +58,7 @@ std::vector < std::pair < double, double >> graphpoints(const std::vector < std:
 
         //this part puts the x value in the function and passes it to the replaceStrings function
         xFunction = replaceStrings(parsedFunction, "x", currentXstring); //replace the xvalue in the xFunction function with the currentXstring
-        currentY = interpreter(xFunction); //sends the xFunction to the interpreter to be solved for y
+        currentY = evaluator(xFunction); //sends the xFunction to the interpreter to be solved for y
 
         if (config::debugMode) { //if debug mode
             for (const std::string& token : xFunction) { //print out the xFunction
