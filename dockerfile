@@ -9,7 +9,7 @@ COPY ./include ./include
 
 #create a build folder and compile the binary to Wasm
 RUN mkdir -p build && cd build && \
-    emcc ../src/*.cpp -I../include -O3 -s ALLOW_MEMORY_GROWTH=1 -sASSERTIONS -s EXIT_RUNTIME=0 -s MODULARIZE=1 -s EXPORT_ES6=1 -s INVOKE_RUN=0 -s "EXPORTED_RUNTIME_METHODS=['callMain']" -o evaluate.js
+    emcc ../src/*.cpp -I../include -O3 -s ALLOW_MEMORY_GROWTH=1 -sASSERTIONS -s EXIT_RUNTIME=0 -s MODULARIZE=1 -s EXPORT_ES6=1 -s INVOKE_RUN=0 -s "EXPORTED_FUNCTIONS=['_main','_fflush']" -s "EXPORTED_RUNTIME_METHODS=['callMain','ccall','cwrap']" -o evaluate.js
 
 
 #build the Astro SSR server
