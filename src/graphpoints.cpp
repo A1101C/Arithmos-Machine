@@ -45,6 +45,15 @@ std::vector < std::pair < double, double >> graphpoints(const std::vector < std:
     std::vector < std::string > xFunction; //declares an empty vector to hold the xFunction
 
     if (config::debugMode) { //if debug mode
+        std::cout << "tokenized xFunction = ";
+        for (const std::string& token : parsedFunction) {
+            std::cout << token << ", ";
+        }
+        std::cout << std::endl;
+
+        std::cout << "xMin = " << xMin << " \n";
+        std::cout << "xMax = " << xMax << " \n";
+        std::cout << "xCount = " << xCount<< " \n";
         std::cout << "xRange = " << xRange << " \n";
         std::cout << "xStep = " <<xStep << " \n";
     }
@@ -58,19 +67,7 @@ std::vector < std::pair < double, double >> graphpoints(const std::vector < std:
 
         //this part puts the x value in the function and passes it to the replaceStrings function
         xFunction = replaceStrings(parsedFunction, "x", currentXstring); //replace the xvalue in the xFunction function with the currentXstring
-        currentY = evaluator(xFunction); //sends the xFunction to the interpreter to be solved for y
-
-        if (config::debugMode) { //if debug mode
-            for (const std::string& token : xFunction) { //print out the xFunction
-                std::cout << "[" << token << "], ";
-            }
-            std::cout << " \n";
-            std::cout << "currentX = " << currentX << " \n"; //print currentX
-            std::cout << "currentY = " << currentY << " \n"; //print currentY
-            std::cout << "xOffset = " << xOffset << " \n"; //print current xOffset
-        }
-
-    
+        currentY = evaluator(xFunction); //sends the xFunction to the interpreter to be solved for y 
 
         xyPairs.push_back({currentX, currentY}); //adds our current x and y as a pair into the vector
 

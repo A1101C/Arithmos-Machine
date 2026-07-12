@@ -194,8 +194,8 @@ int main(int argCount, char*argVector[]) {    //this is the main fuction, int me
     }
 
     if (config::debugMode) { //prints the messy function and clean function if debug mode is true
-        std::cout << "Main finished successfully with:" << " /n";
-        std::cout << messyFunction << "    Cleaned to:    " << cleanFunction << " /n";
+        std::cout << "Main finished successfully with:" << " \n";
+        std::cout << messyFunction << "    Cleaned to:    " << cleanFunction << " \n";
         std::cout << "Tokenized to:  "; //prints each token inside brackets for our tokenized vector
         for (const std::string& token : tokenizedFunction) {
             std::cout << "[" << token << "], ";
@@ -206,7 +206,7 @@ int main(int argCount, char*argVector[]) {    //this is the main fuction, int me
             std::cout << "[" << token << "], ";
         }
         std::cout << std::endl;
-        std::cout << "solution is: "<< solution << " /n";
+        std::cout << "Solved to: "<< solution << " \n";
     }
     
     return 0;

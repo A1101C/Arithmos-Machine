@@ -99,15 +99,7 @@ std::vector < std::string > pemdas(std::vector<std::string> inputVector, int ope
             }
 
             std::string tempToken = "T" + std::to_string(opCounter); //makes a temporary token based on the number of operators we have parsed through
-            opCounter++;
-
-            if (config::debugMode) { //prints the inputFunction for the cleaner to the console if debug is true
-                std::cout << "op = " << op << " \n";
-                std::cout << "LV = " << leftValue << " \n";
-                std::cout << "RV = " << rightValue << " \n";
-                std::cout << std::endl;
-                }
-                
+            opCounter++;        
 
             orderedVector.push_back(leftValue); //add the value to the left to the end of the ordered vector
             orderedVector.push_back(op); //add the operator to the end of the ordered vector
