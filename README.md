@@ -45,7 +45,7 @@ To get to this point I had to learn how to take, clean, and validate a user inpu
 ```
 into:
 ```
-[3], [*], [7], [->], [T1], [4], [/], [3], [->], [T2], [T1], [+], [T2], [->], [T3], [T3], [-], [1], [->], [T4]
+[3], [*], [7], [=], [T1], [4], [/], [3], [=], [T2], [T1], [+], [T2], [=], [T3], [T3], [-], [1], [=], [T4]
 ```
 This pulls out the highest priority and places it first, then the next and so on. when it gets to an operator where one of the values has already been pulled out and replaced with a placeholder it just pulls out that placeholder and uses it in its part of the final expression. The interpreter can then look at every group of 5 items in the vector, know where the operator is, know exactly what two values to preform math with, and then assign them to a variable like T1, then when T1 is later used it has a value and is calculated and treated as its number value. This seems to be very effective though I don't have a Shunting Yard algorithm to compare it against.
 

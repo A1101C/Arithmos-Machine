@@ -19,7 +19,7 @@ double evaluator(std::vector < std::string> orderedVector) { //define the evalua
         std::string leftString = orderedVector[n]; //the first time left and right strings will be numbers but after that they can be T1, T2, ect ect
         std::string opSymbol = orderedVector[n + 1];
         std::string rightString = orderedVector[n + 2];
-        std::string arrow = orderedVector[n + 3];
+        std::string equalSign = orderedVector[n + 3];
         std::string targetValue = orderedVector[n + 4]; //this will always be some value T[n]
 
         double leftNum = 0.0; //initializes and clears the left number

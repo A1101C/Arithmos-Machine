@@ -104,7 +104,7 @@ std::vector < std::string > pemdas(std::vector<std::string> inputVector, int ope
             orderedVector.push_back(leftValue); //add the value to the left to the end of the ordered vector
             orderedVector.push_back(op); //add the operator to the end of the ordered vector
             orderedVector.push_back(rightValue); //add the value to the right to the end of the ordered vector
-            orderedVector.push_back("->"); //add an arrow indicating what placeholder value the removed part of the expression is equal to
+            orderedVector.push_back("="); //add an equal to sign to show that the left is equal to our temp token
             orderedVector.push_back(tempToken); //add the placeholder value that the expression is equal to
 
             if (hasLeftValue) {
@@ -119,7 +119,7 @@ std::vector < std::string > pemdas(std::vector<std::string> inputVector, int ope
             /*the above will take an input vector like:
             [3], [*], [x], [+], [4], [/], [3], [-], [1],
             and turn it into an ordered vector like:
-            [3], [*], [x], [->], [T1], [4], [/], [3], [->], [T2], [T1], [+], [T2], [->], [T3], [T3], [-], [1], [->], [T4]
+            [3], [*], [x], [=], [T1], [4], [/], [3], [=], [T2], [T1], [+], [T2], [=], [T3], [T3], [-], [1], [=], [T4]
             now I need to go from left to right saving the value of 3*x as t1, 4/3 as t2, then t1+t2 as t3, then t3- 1 as t4, and return t4
             */
         }
