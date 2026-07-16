@@ -54,42 +54,29 @@ int main(int argCount, char*argVector[]) {    //this is the main fuction, int me
     double solution; //initializes solution as a double
 
     std::string rawString = argVector[1]; //saves the raw input in the vector position 1 as rawString
-    std::string tempString; //initializes a temp string to hold the input as we clean the rawString
     std::string calcType; //initializes a string to hold the calctype
     std::string messyFunction; //initializes a string to hold the messyFunction
-    bool calcLoop = true; //makes a bool and sets it true for pulling the calctype out of the argVector
-    bool exprLoop = false; //makes a bool and sets it true for pulling the expression out of the argVector
+    int exprStart; //makes an integer to keep track of the starting position for the expression
+    int exprEnd = rawString.length(); //makes an integer to keep track of the end position for the expression
 
+    //Input expression Parser start
+    //the purpose of this is to turn calcType(expression) into calcType and expression but leaving any parenthesis inside of expression untouched
     for ( int n = 0; n < rawString.length(); n++){ //for the length of the rawString
-        while (calcLoop == true){
-            if (rawString[n] != '('){
-                tempString.push_back(rawString[n]);
-                n++;
-            }
-            else{
-                calcType = tempString;
-                tempString.clear();
-                calcLoop = false;
-                exprLoop = true;
-                n++;
-            }
-            
+        if (rawString[n] != '('){ //loop through looking at the nth position making sure its not '(' and just continuing until you find '('
+            continue;
         }
-        while (exprLoop == true){
-            if (rawString[n] != ')'){
-                tempString.push_back(rawString[n]);
-                n++;
-            }
-            else{
-                messyFunction = tempString;
-                tempString.clear();
-                exprLoop = false;
-                n++;
-            }
-
-        }
+        else //if it finds '(' save its position as n, and exit the loop
+            exprStart = n;
+            break; 
     }
 
+    calcType = rawString.substr(0, exprStart); //make calcType equal to the substring we extract from rawString starting at position 0 and pulling out exprStart number of positions
+    messyFunction = rawString.substr(exprStart+1, exprEnd-exprStart-2); //see above, the +1 makes us start at the position past the open parenthesis and the -2 and the end ensure we dont get the closed parenthesis
+    //Input expression Parser end
+
+    if (config::debugMode){
+                std::cout << "Input Parser ended with: " << calcType << " " << messyFunction << " \n";
+            } 
 
 
     //run the function through the cleaner, lexer, and parser regardless of if we are graphing or not
