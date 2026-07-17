@@ -1,0 +1,56 @@
+
+cmake_minimum_required(VERSION 3.14) #minimum required version for for gTest features
+project(ExplicandaWASM CXX) #defines the project name as ExplicandaWASM and states it is written in cpp
+
+set(CMAKE_CXX_STANDARD 17) #tells the compiler to use the c++ 17 standard from 2017
+set(CMAKE_CXX_STANDARD_REQUIRED ON) #forces the compiler to use c++ 17 so it cant fall back to an older version
+
+#define source and include directories relative to the CMake file
+set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../include")
+file(GLOB ENGINE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../src/*.cpp")
+
+
+#this is the fork in the road where it will compile either the wasm or the regular binary
+if(EMSCRIPTEN) #when running emccmake cmake it will inject a variable telling cmake to use the emcc and evaluate this statement to true
+    message(STATUS "WebAssembly Build via Emscripten...")
+
+    add_executable(evaluate.js ${ENGINE_SOURCES}) #this makes the evaluage.js glue and compiles the evaluate.wasm binary from the engine sources
+    target_include_directories(evaluate.js PRIVATE ${INCLUDE_DIR}) #this tells the compiler to include these directories
+
+    target_link_options(evaluate.js PRIVATE #these are the build flags I have enabled
+        "-O3" #Optimizes for speed above all else
+        "-sALLOW_MEMORY_GROWTH=1" #allows the binary to expand its memory for larger calculations
+        "-sASSERTIONS" #turns on runtime checks in the evaluate.js so we get clear descriptive errors
+        "-sEXIT_RUNTIME=0" #this keeps the binary running even when it returns 0 so the client doesnt have to reload it every time they want to run a calculation
+        "-sMODULARIZE=1" #this wraps the entire glue code in its own funciton so it doesnt spread its variables across the entire browser
+        "-sEXPORT_ES6=1" #This turns the js code into an ES6 module so it can use import and export statements to bring it into my astro components
+        "-sINVOKE_RUN=0" #This prevents the wasm code from running until it is called
+        "-sEXPORTED_FUNCTIONS=['_main','_fflush']" #this deletes any cpp funtions not being used so that we dont have the executable running but doing nothing, this allows us to send it follow up requests without having to close and restart the program
+        "-sEXPORTED_RUNTIME_METHODS=['callMain','ccall','cwrap']" #this allows me to call the main and pass it c++ data types and have it pass data types back out
+    )
+
+#building the desktop binary
+else()
+    message(STATUS "Desktop Binary & GTest Build...")
+
+    add_executable(engine ${ENGINE_SOURCES}) #grabs the engine sources
+    target_include_directories(engine PRIVATE ${INCLUDE_DIR}) #includes the include directory
+
+    # this grabs the google gTest content so we can integrate that set of tests into our program
+    include(FetchContent)
+    FetchContent_Declare(
+      googletest
+      GIT_REPOSITORY https://github.com/google/googletest.git
+      GIT_TAG v1.17.0
+    )
+    FetchContent_MakeAvailable(googletest) #
+
+    # Builds the gTest Executable
+    enable_testing()
+    add_executable(gtest_tests /../tests/gtest_tests.cpp ${ENGINE_SOURCES}) #says to make the gtest_tests executable and use gtests_test.cpp and the engine sources
+    target_include_directories(gtest_tests PRIVATE ${INCLUDE_DIR}) #includes the include folder in the build
+    target_link_libraries(gtest_tests PRIVATE gtest_main) #uses the gTest library to put a gtest_main() function in the binary
+
+    include(GoogleTest) #this tells CMake to look inside the compiled unit_tests binary and register each TEST()
+    gtest_discover_tests(gtest_tests)
+endif()
