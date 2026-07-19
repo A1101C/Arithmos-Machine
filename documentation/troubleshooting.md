@@ -4,27 +4,27 @@
 
 #### Very verbose debugging output in the Debug Console
 This goes in the body of a launch config.
-```
+```json
 "logging": {
     "engineLogging": true,
     "trace": true,
     "traceResponse": true
-},
+}
 ```
 
 #### Disable remote debug symbol downloads:
 This goes in the setupCommands of your launch config.
-```
+```json
 {
     "description": "Disable remote downloads",
     "text": "-gdb-set debuginfod enabled off",
     "ignoreFailures": true
-},
+}
 ```
 
 #### Spawn the program as a child of the debugger rather than spawning it in a new shell
 This goes in the setupCommands of your launch config.
-```
+```json
 {
     "description": "Disable startup with shell",
     "text": "set startup-with-shell off",
@@ -46,7 +46,7 @@ This seems to be a very common and well known issue with cppdbg on linux but I h
 
 - Tried to use the setupCommand above to disable remote downloads.
 - Put both the following in settings.json and restarted vscode
-```
+```json
 "terminal.integrated.env.linux": {
     "DEBUGINFOD_URLS": ""
 },
@@ -60,7 +60,7 @@ This seems to be a very common and well known issue with cppdbg on linux but I h
 **What finally worked**
 
 None of the above worked, MIEngine kept injecting the command to download debug symbols into gdb after my disable command was passed to it. I was finally able to prevent gdb from downloading remote sources by opening /etc/environment and adding "DEBUGINFOD_URLS= " and restarting my computer:
-```
+```bash
 DEBUGINFOD_URLS=
 ```
 gdb still tries to download remote sources but it finally doesn't have a url to download from and immediately skips that step. It is possible to manually download remote sources by doing the following:
@@ -69,7 +69,7 @@ gdb still tries to download remote sources but it finally doesn't have a url to 
 ##### My project does not currently requite any remote debug symbols but this is still useful information.
 Run this from the project root to see every library it depends on, along with its build-id:
 
-```
+```bash
 for lib in $(ldd output/engine | awk '{print $3}' | grep '^/'); do
     echo "== $lib =="
     file "$lib" | grep -o 'BuildID\[sha1\]=[a-f0-9]*'
@@ -78,12 +78,12 @@ done
 `ldd output/engine` lists all the shared libraries the binary is linked to. The rest of the command grabs the build id for those shared libraries and prints them.
 
 You can put the build-id in this command to query the debuginfod server and fetch the debug files which get dropped into `~/.cache/debuginfod_client/,`
-```
+```bash
 DEBUGINFOD_URLS="https://debuginfod.ubuntu.com" debuginfod-find debuginfo <build-id>
 ```
-If you are able to successfully download the libraries you need you can re-enable gdb trying to fetch them by editing /etc/environment and either deleting the debuginfod line or adding the url to it:
-```
+If you are able to successfully download the libraries you need you can re-enable gdb trying to fetch them by editing `/etc/environment` and either deleting the debuginfod line or adding the url to it:
+```bash
 DEBUGINFOD_URLS=https://debuginfod.ubuntu.com
 ```
-You do have to restart your computer for this to take effect. However your debuginfo should be good for a whole day and gdb shouldn't try to download for the period specified in '~/.cache/debuginfod/cache_clean_interval_s` which defaults to 86400 seconds which is equal to one day. You can extend the period of time that is good for by increasing that value.
+You do have to restart your computer for this to take effect. However your debuginfo should be good for a whole day and gdb shouldn't try to download for the period specified in `~/.cache/debuginfod/cache_clean_interval_s` which defaults to `86400` seconds which is equal to one day. You can extend the period of time that is good for by increasing that value.
 
