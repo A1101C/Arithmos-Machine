@@ -1,0 +1,76 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Fast Compile Engine Only",
+            "type": "shell", //in the shell execute this task
+            "command": "cmake --build ${workspaceFolder}/build/nativeBuild --target engine -j", //use this command to build the cmake configuration for the native binary
+            "options": {
+                "cwd": "${workspaceFolder}" //sets our current working directory to the projects root directory to use for relative pathing
+            },
+            "group": {
+                "kind": "build", //can be build or test, describes what kind of task this is
+                "isDefault": true //says this is the default task if one is not selected
+            },
+            "problemMatcher": "$gcc" //this tells vscode to put erros and warnings in the problems tab
+        },
+        {
+            "label": "Full Build with gTest",
+            "type": "shell",
+            "command": "python3 ${workspaceFolder}/tests/build_and_test.py",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Fresh Native Cache Configure", //this is a sub task that runs before another task
+            "type": "shell", //in the shell execute this task
+            "command": "cmake --fresh -S ${workspaceFolder} -B ${workspaceFolder}/build/nativeBuild", //reconfigure the build environment for the native binary
+            "problemMatcher": "$gcc" //this tells vscode to put erros and warnings in the problems tab
+        },
+        {
+            "label": "Fresh Full Cache Configure",
+            "type": "shell",
+            "command": "cmake --fresh -S ${workspaceFolder} -B ${workspaceFolder}/build/nativeBuild && emcmake cmake --fresh -S ${workspaceFolder} -B ${workspaceFolder}/build/wasmBuild",
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Fresh Compile Engine Only",
+            "type": "shell",
+            "command": "cmake --build ${workspaceFolder}/build/nativeBuild --target engine -j",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": "$gcc",
+            "dependsOn": [
+                "Fresh Native Cache Configure"
+            ]
+        },
+        {
+            "label": "Full Fresh Build with gTest",
+            "type": "shell",
+            "command": "python3 ${workspaceFolder}/tests/build_and_test.py",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": "$gcc",
+            "dependsOn": [
+                "Fresh Full Cache Configure"
+            ]
+            
+        },
+    ]
+}

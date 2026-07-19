@@ -145,7 +145,7 @@ int main(int argCount, char*argVector[]) {    //this is the main fuction, int me
                 } 
                 
                 else {
-                    //if argCount is less than five they didnt enter enough arguments so just proceed with the defaults we preloaded
+                    //if argCount is less than five they didn't enter enough arguments so just proceed with the defaults we preloaded
                     if (config::debugMode) {
                         std::cout << "Optional bounds missing, using default.\n";
                     }

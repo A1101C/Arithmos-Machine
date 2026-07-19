@@ -83,7 +83,7 @@ To pull out numbers that exceed one index position like 12.5 we simply ask:
 
 Is the current character, currentChar, at position inputFunction[n] is a digit? if it is we add it to a temporary token called currentToken. Then since we know we started looking at a number we can look at the next position of n, and if its a number or a decimal place then we add it to the currentToken. Only once we are no longer looking at a number or a decimal place we can push the currentToken into the lexedTokens vector, clear the currentToken and then ask, What is the next character?
 
-Is currentChar alphabetical? If so then we could be looking at either an 'x' or maybe a trig function like 'sin' so to know we need to evaluate what the next three currentChar's are toghether as nextThree. We then check if they are contained in our list of trig functions or logarithmic functions and if they are we add the function to the lexedTokens and clear the currentToken.
+Is currentChar alphabetical? If so then we could be looking at either an 'x' or maybe a trig function like 'sin' so to know we need to evaluate what the next three currentChar's are together as nextThree. We then check if they are contained in our list of trig functions or logarithmic functions and if they are we add the function to the lexedTokens and clear the currentToken.
 
 but if currentChar is an x or X we normalize X to x and then add it to the lexed tokens and check if the lastCharacter was a digit, and if it was we insert a [*], token between them so that coefficients are multiplied correctly.
 
