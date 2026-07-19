@@ -26,12 +26,12 @@
         "traceResponse": true
       },
 
-      { //these two might be helpful if attempting to troubleshoot an issue with GDB
+      { //these two might be helpful if attempting to troubleshoot an issue with GDB and go in the setupCommands
         "description": "Disable remote downloads",
         "text": "-gdb-set debuginfod enabled off",
         "ignoreFailures": true
       },
-      {
+      { //this command tells the debugger to execute the program directly itself rather than spawning it in a new shell
         "description": "Disable startup with shell",
         "text": "set startup-with-shell off",
         "ignoreFailures": false
