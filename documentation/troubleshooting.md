@@ -43,6 +43,7 @@ I ran into an issue with GDB stalling while trying to download additional debug 
 This seems to be a very common and well known issue with cppdbg on linux but I had a hard time finding a solution that worked for me. My initial investigation and research found that gbd was being spawned as a child of sh rather than of code or any part of the debugger. I initially tried to fix that with the Disable startup with shell setupCommand above but it still spawned as a child of sh. I then verified that it was being spawned with bash, and that I could call it manually to get into the gdb command line tool. After verifying that gdb was in fact working I turned my attention back to preventing remote downloads.
 
 **Things I did to try and prevent remote downloads that failed**
+
 - Tried to use the setupCommand above to disable remote downloads.
 - Put both the following in settings.json and restarted vscode
 ```
@@ -57,6 +58,7 @@ This seems to be a very common and well known issue with cppdbg on linux but I h
 - commented out "#https://debuginfod.ubuntu.com" in /etc/debuginfod/elfutils.urls and restarted my computer.
 
 **What finally worked**
+
 None of the above worked, MIEngine kept injecting the command to download debug symbols into gdb after my disable command was passed to it. I was finally able to prevent gdb from downloading remote sources by opening /etc/environment and adding "DEBUGINFOD_URLS= " and restarting my computer:
 ```
 DEBUGINFOD_URLS=
@@ -83,5 +85,5 @@ If you are able to successfully download the libraries you need you can re-enabl
 ```
 DEBUGINFOD_URLS=https://debuginfod.ubuntu.com
 ```
-You do have to restart your computer for this to take effect.
+You do have to restart your computer for this to take effect. However your debuginfo should be good for a whole day and gdb shouldn't try to download for the period specified in '~/.cache/debuginfod/cache_clean_interval_s` which defaults to 86400 seconds which is equal to one day. You can extend the period of time that is good for by increasing that value.
 
