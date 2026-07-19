@@ -1,0 +1,148 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Astro: Development Server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/portal"
+    },
+    {
+      "name": "Node: Attach to Process",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+
+    //additional Options for debugging with cppdbg
+    /*
+      "logging": { //this will output very verbose information to the debug console
+        "engineLogging": true,
+        "trace": true,
+        "traceResponse": true
+      },
+
+      { //these two might be helpful if attempting to troubleshoot an issue with GDB
+        "description": "Disable remote downloads",
+        "text": "-gdb-set debuginfod enabled off",
+        "ignoreFailures": true
+      },
+      {
+        "description": "Disable startup with shell",
+        "text": "set startup-with-shell off",
+        "ignoreFailures": false
+      }
+    */
+
+    {
+      "name": "C/C++: g++ Fast Compile Engine Only",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/output/engine", //this is what we are pointing the debugger at
+      "args": ["graph(3x+1)", "-10", "10", "20"], //we want to feed it this while debugging
+      "stopAtEntry": false, //we can have it stop at entry if we want to click through and watch it work
+      "cwd": "${workspaceFolder}", //just specifies our current working directory as the projects root directory for relative pathing
+      "externalConsole": false, //true will run the program in a new terminal window, false runs it in the terminal at the bottom of code
+      "MIMode": "gdb", //tells the cppdbg what debugger we are using
+      "miDebuggerPath": "/usr/bin/gdb", //explicitly points MIEngine at gdb
+      "setupCommands": [ //injects commands into gbd when called by MIEngine
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true //this allows the debugger to give us more easily readable output
+        },
+        {
+          "description": "Set Disassembly Flavor to Intel",
+          "text": "-gdb-set disassembly-flavor intel",
+          "ignoreFailures": true //makes sure we see the assembly code in Intel Syntax
+        }
+      ],
+      "preLaunchTask": "Fast Compile Engine Only" //call this task in tasks.json and runs it before debugging
+    },
+
+
+    {
+      "name": "C/C++: g++ Fresh Compile Engine Only",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/output/engine",
+      "args": ["graph(3x+1)", "-10", "10", "20"],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "miDebuggerPath": "/usr/bin/gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "Set Disassembly Flavor to Intel",
+          "text": "-gdb-set disassembly-flavor intel",
+          "ignoreFailures": true
+        }
+      ],
+      "preLaunchTask": "Fresh Compile Engine Only"
+    },
+
+
+    {
+      "name": "C/C++: g++ Full Build with gTest",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/output/engine",
+      "args": ["graph(3x+1)", "-10", "10", "20"],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "miDebuggerPath": "/usr/bin/gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "Set Disassembly Flavor to Intel",
+          "text": "-gdb-set disassembly-flavor intel",
+          "ignoreFailures": true
+        }
+      ],
+      "preLaunchTask": "Full Build with gTest"
+    },
+
+
+    {
+      "name": "C/C++: g++ Full Fresh Build with gTest",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/output/engine",
+      "args": ["graph(3x+1)", "-10", "10", "20"],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "miDebuggerPath": "/usr/bin/gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "Set Disassembly Flavor to Intel",
+          "text": "-gdb-set disassembly-flavor intel",
+          "ignoreFailures": true
+        }
+      ],
+      "preLaunchTask": "Full Fresh Build with gTest"
+    }
+  ]
+}
